@@ -12,20 +12,21 @@ Base = declarative_base()
 
 conf = config.__get_app_conf(config.MODE)['DB']
 engine = create_async_engine(conf['DSN'])
-async_session = sessionmaker(engine,
+async_session_maker = sessionmaker(engine,
                              autocommit=conf['AUTO_COMMIT'],
                              autoflush=conf['AUTO_FLUSH'],
                              class_=AsyncSession,
                              expire_on_commit=False,
                              future=True)
 
+db_session = async_session_maker()
 
-async def close_db():
-    print("*****close*****")
-    #session = async_session()
-    #await session.close()
-    await engine.dispose()
-    print("*****ok*****")
+
+async def close_session():
+    global db_session
+    if db_session:
+        print("*****close*****")
+        await db_session.close()
 
 # モデルの追加
 from app.model.users import Users

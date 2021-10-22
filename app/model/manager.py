@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.future import select
 from sqlalchemy import update, insert, delete, text, func
-from app.model import async_session
 
 
 class ModelManager():
 
-    @property
-    def async_session(self):
-        """
-        外部でtransaction管理するためにsessionmakerを渡す
-        """
-        return async_session
+    def __init__(self):
+        from app.model import db_session
+        self.db_session = db_session
 
     async def insert(self, dt, session=None):
         try:
@@ -20,9 +16,8 @@ class ModelManager():
                 ret = await self._insert(dt, session)
                 return ret.inserted_primary_key[0]
 
-            # transaction作成してcommit
-            async with async_session.begin() as session:
-                ret = await self._insert(dt, session)
+            async with self.db_session.begin():
+                ret = await self._insert(dt, self.db_session)
                 return ret.inserted_primary_key[0]
 
         except Exception as e:
@@ -40,8 +35,8 @@ class ModelManager():
                 return await self._update(dt, cond, session)
 
             # transaction作成してcommit
-            async with async_session.begin() as session:
-                return await self._update(dt, cond, session)
+            async with self.db_session.begin():
+                return await self._update(dt, cond, self.db_session)
 
         except Exception as e:
             raise DBException() from e
@@ -61,8 +56,8 @@ class ModelManager():
                 return await self._delete(cond, session)
 
             # transaction作成してcommit
-            async with async_session.begin() as session:
-                return await self._delete(cond, session)
+            async with self.db_session.begin():
+                return await self._delete(cond, self.db_session)
 
         except Exception as e:
             raise DBException() from e
@@ -78,8 +73,8 @@ class ModelManager():
                 # 外部でtransaction管理している
                 return await self._select_one(dt, key, session)
 
-            async with async_session.begin() as session:
-                return await self._select_one(dt, key, session)
+            async with self.db_session.begin():
+                return await self._select_one(dt, key, self.db_session)
 
         except Exception as e:
             raise DBException() from e
@@ -103,8 +98,8 @@ class ModelManager():
                 # 外部でtransaction管理している
                 return await self._select(cond, order_by, offset, limit, session)
 
-            async with async_session.begin() as session:
-                return await self._select(cond, order_by, offset, limit, session)
+            async with self.db_session.begin():
+                return await self._select(cond, order_by, offset, limit, self.db_session)
 
         except Exception as e:
             raise DBException() from e
@@ -120,8 +115,8 @@ class ModelManager():
                 # 外部でtransaction管理している
                 return await self._select_count(cond, session)
 
-            async with async_session.begin() as session:
-                return await self._select_count(cond, session)
+            async with self.db_session.begin():
+                return await self._select_count(cond, self.db_session)
 
         except Exception as e:
             raise DBException() from e

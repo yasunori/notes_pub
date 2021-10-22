@@ -100,7 +100,7 @@ class UsersManager(ModelManager):
             logging.info(str(te), exc_info=True)
             raise te
 
-    async def delete(self, id, session=None):
+    async def delete_one(self, id, session=None):
         user = await self.select_one(id)
         if not user:
             return False
